@@ -4,6 +4,32 @@ Append-only record of ratified decisions. Newest first. ROADMAP.md holds
 direction; this file holds *what was settled and why*, so it is not
 re-litigated. Each entry links to a trace where one exists.
 
+## D10 — 2026-08-18 — Pin the invariant the provider guarantees; decline the UI it suggested
+
+- **Decision:** adopt `tonality-live-conform-bound`. Add the corrected
+  boundary invariant to `./verify full` (human-approved — editing the oracle is
+  a §Domain gate). Decline the suggested `"range"` UI callout on measured
+  grounds. Correct the notice's premise about our tree in the reply.
+- **We never pinned the false claim.** The notice assigned us the ball on the
+  belief that our contract test asserted `|delta| <= 6` unconditionally. It did
+  not — the phrase appears in this repo only in a trace, as an observation of a
+  sample. Accepting a correction we did not need would have been the easy,
+  agreeable, wrong answer; the reply says so plainly and suggests they check
+  their own CI, which is where the three contracts live.
+- **Measurement beat the provider's own estimate of our exposure.** They said
+  catalog gap 4 makes it unreachable; sweeping 4,914 boundary edits showed the
+  worst reachable snap is **3**, and zero snaps leave 0..127.
+- **`"range"` was reframed by the data.** It fires on ~10% of boundary edits,
+  almost all 1-semitone — it marks *the register decided this tie*, not *this
+  note jumped far*. That is why the UI suggestion is declined: the condition it
+  would explain cannot produce a surprising jump.
+- **Why pin an invariant that cannot fail today.** Not to catch a symptom — to
+  hold the promise. A future catalog entry with a wide gap, or an engine change
+  at the edge, would otherwise surface as a user reporting a leaping note. The
+  fixture asserts it still *produces* edits for exactly this reason: a check
+  that quietly stops exercising its case is worse than none, because it reads
+  green.
+
 ## D9 — 2026-08-18 — Naming a clip with its key is display-layer, and the vocabulary comes from the engine
 
 - **Decision:** the workshop's Render writes the resulting key into the clip
