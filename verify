@@ -160,6 +160,39 @@ print("  /transform remap -> %s, %d distinct (walk intact)" % (pitches, len(set(
     return 1
   }
 
+  # Boundary invariant (Tonality notice `tonality-live-conform-bound`, 2026-08-15).
+  # The provider corrected an earlier promise: a snap is NOT bounded by 6
+  # semitones "by construction" — near MIDI 0/127 the nearer candidate can fall
+  # out of range, and the in-range one it takes instead may be further. What IS
+  # guaranteed is pinned here, so a future engine or catalog change that makes a
+  # far boundary jump reachable shows up as a red rather than as a user
+  # reporting a note that leapt. Measured 2026-08-18: unreachable today (worst
+  # |delta| = 3 over the whole catalog), so this pins a promise, not a symptom.
+  local edge
+  edge=$(curl -sf --max-time 5 -X POST "$BRIDGE_URL/transform" \
+    -H 'Content-Type: application/json' \
+    -d '{"op":"conform_to_scale","scale":"Ionian","rootPc":11,"notes":[{"pitch":0,"startTime":0,"duration":1},{"pitch":1,"startTime":1,"duration":1},{"pitch":126,"startTime":2,"duration":1},{"pitch":127,"startTime":3,"duration":1}]}' 2>/dev/null) || {
+    echo "  FAIL: /transform boundary fixture did not respond 2xx" >&2
+    return 1
+  }
+  printf '%s' "$edge" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+edits = d["report"]["edits"]
+assert edits, "boundary fixture produced no edits — fixture no longer exercises the edge"
+for n in d["notes"]:
+    assert 0 <= n["pitch"] <= 127, f"snap left the MIDI range: {n}"
+for e in edits:
+    assert abs(e["delta"]) <= 6 or e["tie_resolution"] == "range", (
+        f"snap exceeded 6 semitones without the range flag that licenses it: {e}")
+flagged = [e for e in edits if e["tie_resolution"] == "range"]
+print("  /transform boundary -> %d edits in range, %d flagged tie_resolution=range, max |delta| %d"
+      % (len(edits), len(flagged), max(abs(e["delta"]) for e in edits)))
+' || {
+    echo "  FAIL: /transform violated the MIDI-boundary snap invariant" >&2
+    return 1
+  }
+
   # The refusal is a feature: 7 degrees cannot translate into 5. Expect a 4xx
   # carrying the engine's own reason, never a silent success.
   local code

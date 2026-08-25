@@ -404,6 +404,35 @@ theory in this repo** — theory-driven alters go through the bridge's
   end-to-end by their guarantee; nothing to pin on our side beyond not adding
   a model in front of it.
 
+### Q-020 — Conform's 6-semitone bound was overstated upstream; pin the real one
+- **Status:** done 2026-08-18 (trace: traces/2026-08-18-q020-conform-bound.md).
+  Inbound notice `tonality-live-conform-bound` (Tonality, 2026-08-15), adopted;
+  reply filed, ball closed.
+- **The notice's premise about us was wrong, and saying so was half the work.**
+  It set `ball: consumer` because "one of your three pinned contract tests
+  asserts the false version". We never pinned it: `git grep` finds `≤ 6` only in
+  a trace recording an *observation* (max distance seen = 6), and `./verify`
+  asserted no delta bound at all. Nothing to relax. If the three contracts live
+  in the provider's CI on our behalf, the stale assertion is in their tree.
+- **Exposure measured, not assumed:** 37 catalog scales × 12 roots × 26 boundary
+  pitches = 4,914 edits. Worst `|delta|` **3** (Hirajoshi, 127→124); zero snaps
+  outside 0..127; 472 edits (~10%) carry `tie_resolution: "range"`. So the false
+  claim is unreachable through our UI, with a wide margin.
+- **`"range"` means "the boundary decided this tie", not "this note jumped"** —
+  nearly all 472 are 1-semitone moves. That reframing is why the notice's UI
+  suggestion was declined (below) rather than built.
+- **Declined, with grounds:** the notice suggested flagging `"range"` in the UI
+  the way collisions are flagged, since a big unexplained jump reads as a bug.
+  The biggest reachable jump is 3 semitones. UI weight against an impossible
+  condition is not worth carrying; recorded as a grounded no.
+- **Gate added instead (human-approved, strengthening not weakening):**
+  `./verify full` now pins the invariant the provider actually guarantees
+  against a MIDI-boundary fixture — `0 <= to_midi <= 127` always,
+  `|delta| <= 6 or tie_resolution == "range"`, and a non-empty edit list so a
+  catalog change cannot silently turn the check into a no-op. Each assertion was
+  proved to fire on a crafted violation, including the provider's worked
+  `delta = +11` case, which correctly passes because it carries the flag.
+
 ### Q-019 — Workshop render polish: playhead alignment, key in the clip name
 - **Status:** done 2026-08-18 (trace: traces/2026-08-18-q019-render-polish.md).
   Human-reported, both items.
